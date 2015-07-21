@@ -176,8 +176,6 @@ public class HBaseSensors {
 			String finalDate, String data) throws IOException {
 		try {
 			HTable table = new HTable(conf, tableName);
-			Scan s = new Scan();
-			ResultScanner ss = table.getScanner(s);
 
 			// Variables to calculate average
 			float average = 0;
@@ -208,6 +206,7 @@ public class HBaseSensors {
 			String time = null;
 			String dataValue = null;
 
+			// Iterate with the whole table
 			for (int i = 1; i < HBaseSensors.getTotalRows(tableName) + 1; i++) {
 				Get get = new Get(String.valueOf(i).getBytes());
 				Result rs = table.get(get);
@@ -250,11 +249,11 @@ public class HBaseSensors {
 									sum = sum + Integer.parseInt(dataValue);
 									count++;
 								}
-
 			}
 
+			// Calculate average
 			average = sum / count;
-			
+
 			//Print result
 			System.out.println("Average of " + data + " in " + tableName
 					+ " is " + average);
@@ -278,8 +277,6 @@ public class HBaseSensors {
 			String finalDate, String data) throws IOException {
 		try {
 			HTable table = new HTable(conf, tableName);
-			Scan s = new Scan();
-			ResultScanner ss = table.getScanner(s);
 
 			// Variables to calculate standard deviation
 			float average = 0;
@@ -313,6 +310,7 @@ public class HBaseSensors {
 			String time = null;
 			String dataValue = null;
 
+			// Iterate with the whole table
 			for (int i = 1; i < HBaseSensors.getTotalRows(tableName) + 1; i++) {
 				Get get = new Get(String.valueOf(i).getBytes());
 				Result rs = table.get(get);
@@ -366,13 +364,14 @@ public class HBaseSensors {
 
 			deviation = deviation / count;
 
+			// Calculate standard deviation
 			standardDeviation = Math.sqrt(deviation);
 
-			
+
 			//Print result
 			System.out.println("Standard deviation of " + data + " in "
 					+ tableName + " is " + standardDeviation);
-			
+
 			System.out.println("From: " + initMonth + "/" + initDay + "/"
 					+ initYear + " " + initHourStr + ":" + initMinStr
 					+ initDayLight + " to " + finalMonth + "/" + finalDay + "/"
@@ -389,45 +388,50 @@ public class HBaseSensors {
 	public static void main(String[] agrs) {
 		try {
 
-			HBaseSensors.average("sensor-1", "201507010100am",
-					"201507010300am", "temperature");
-			HBaseSensors.standardDeviation("sensor-1", "201507010100am",
-					"201507010300am", "temperature");
+			HBaseSensors.average("sensor-1", "201507010100am", "201507010300am", "temperature");
+			HBaseSensors.standardDeviation("sensor-1", "201507010100am", "201507010300am", "temperature");
 
-			/**
-			 * Create and populate table
-			 * 
-			 * // Create table "sensor-1"; String tableSensor1 = "sensor-1";
-			 * String[] sensor1Family = {"sensorData1"};
-			 * HBaseSensors.creatTable(tableSensor1, sensor1Family);
-			 * 
-			 * 
-			 * int row = 0; int temperature = 0; int humidity = 0; int light =
-			 * 0; String nutrition = "10:20:30";
-			 * 
-			 * Random generator = new Random();
-			 * 
-			 * HBaseSensors.addRecord(tableSensor1, "1", "sensorData1", "time",
-			 * "201507010100am"); HBaseSensors.addRecord(tableSensor1, "2",
-			 * "sensorData1", "time", "201507010300am");
-			 * HBaseSensors.addRecord(tableSensor1, "3", "sensorData1", "time",
-			 * "201507010500am"); HBaseSensors.addRecord(tableSensor1, "4",
-			 * "sensorData1", "time", "201507010700am");
-			 * 
-			 * for (int z = 0; z < 4; z++) { row++; temperature = 50 +
-			 * generator.nextInt(30); humidity = 50 + generator.nextInt(30);
-			 * light = 50 + generator.nextInt(30);
-			 * 
-			 * HBaseSensors.addRecord(tableSensor1, Integer.toString(row),
-			 * "sensorData1", "temperature", Integer.toString(temperature));
-			 * HBaseSensors.addRecord(tableSensor1, Integer.toString(row),
-			 * "sensorData1", "humidity", Integer.toString(humidity));
-			 * HBaseSensors.addRecord(tableSensor1, Integer.toString(row),
-			 * "sensorData1", "light", Integer.toString(light));
-			 * HBaseSensors.addRecord(tableSensor1, Integer.toString(row),
-			 * "sensorData1", "nutrition", nutrition); }
-			 **/
 
+			/* THE CODE BELOW IS TO CREATE AND POPULATE THE TABLE
+			
+			// Create table "sensor-1"; 
+			String tableSensor1 = "sensor-1";
+			String[] sensor1Family = {"sensorData1"};
+			HBaseSensors.creatTable(tableSensor1, sensor1Family);
+
+
+			int row = 0; 
+			int temperature = 0; 
+			int humidity = 0; 
+			int light = 0; 
+			String nutrition = "10:20:30";
+
+			Random generator = new Random();
+
+			HBaseSensors.addRecord(tableSensor1, "1", "sensorData1", "time", "201507010100am"); 
+			HBaseSensors.addRecord(tableSensor1, "2", "sensorData1", "time", "201507010300am");
+			HBaseSensors.addRecord(tableSensor1, "3", "sensorData1", "time", "201507010500am"); 
+			HBaseSensors.addRecord(tableSensor1, "4", "sensorData1", "time", "201507010700am");
+
+			for (int z = 0; z < 4; z++) 
+			{ 
+				row++;
+				temperature = 50 + generator.nextInt(30); 
+				humidity = 50 + generator.nextInt(30);
+				light = 50 + generator.nextInt(30);
+				
+				HBaseSensors.addRecord(tableSensor1, Integer.toString(row),
+						"sensorData1", "temperature", Integer.toString(temperature));
+				HBaseSensors.addRecord(tableSensor1, Integer.toString(row),
+						"sensorData1", "humidity", Integer.toString(humidity));
+				HBaseSensors.addRecord(tableSensor1, Integer.toString(row),
+						"sensorData1", "light", Integer.toString(light));
+				HBaseSensors.addRecord(tableSensor1, Integer.toString(row),
+						"sensorData1", "nutrition", nutrition);
+			}
+			*/
+
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
