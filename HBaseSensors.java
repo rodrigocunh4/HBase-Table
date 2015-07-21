@@ -36,7 +36,7 @@ public class HBaseSensors {
      * Create a table
      */
     @SuppressWarnings("deprecation")
-    public static void creatTable(String tableName, String[] familys)
+	public static void creatTable(String tableName, String[] familys)
             throws Exception {
         HBaseAdmin admin = new HBaseAdmin(conf);
         if (admin.tableExists(tableName)) {
@@ -56,7 +56,7 @@ public class HBaseSensors {
      * Delete a table
      */
     @SuppressWarnings("deprecation")
-    public static void deleteTable(String tableName) throws Exception {
+	public static void deleteTable(String tableName) throws Exception {
         try {
             HBaseAdmin admin = new HBaseAdmin(conf);
             admin.disableTable(tableName);
@@ -74,7 +74,7 @@ public class HBaseSensors {
      * Put (or insert) a row
      */
     @SuppressWarnings("deprecation")
-    public static void addRecord(String tableName, String rowKey,
+	public static void addRecord(String tableName, String rowKey,
             String family, String qualifier, String value) throws Exception {
         try {
             HTable table = new HTable(conf, tableName);
@@ -94,7 +94,7 @@ public class HBaseSensors {
      * Delete a row
      */
     @SuppressWarnings("deprecation")
-    public static void delRecord(String tableName, String rowKey)
+	public static void delRecord(String tableName, String rowKey)
             throws IOException {
         HTable table = new HTable(conf, tableName);
         List<Delete> list = new ArrayList<Delete>();
@@ -109,7 +109,7 @@ public class HBaseSensors {
      * Get a row
      */
     @SuppressWarnings("deprecation")
-    public static void getOneRecord (String tableName, String rowKey) throws IOException{
+	public static void getOneRecord (String tableName, String rowKey) throws IOException{
         HTable table = new HTable(conf, tableName);
         Get get = new Get(rowKey.getBytes());
         Result rs = table.get(get);
@@ -126,82 +126,152 @@ public class HBaseSensors {
      * Scan (or list) a table
      */
     @SuppressWarnings("deprecation")
-    public static void getAllRecord (String tableName) {
+	public static int getAllRecord (String tableName) {
+    	int totalRecord = 0;
         try{
              HTable table = new HTable(conf, tableName);
              Scan s = new Scan();
              ResultScanner ss = table.getScanner(s);
              for(Result r:ss){
+            	 totalRecord++;
                  for(KeyValue kv : r.raw()){
+                	 /**
                     System.out.print(new String(kv.getRow()) + " ");
                     System.out.print(new String(kv.getFamily()) + ":");
                     System.out.print(new String(kv.getQualifier()) + " ");
                     System.out.print(kv.getTimestamp() + " ");
                     System.out.println(new String(kv.getValue()));
+                    **/
                  }
              }
              table.close();
         } catch (IOException e){
             e.printStackTrace();
         }
+        
+        return totalRecord;
     }
     
     /**
-     * return average
-     * @param tableName,range, and data
+     * Calculate average of a given data
      */
-    public static void dayAverage (String tableName){
-        
+    public static void average (String tableName, String initialDate, String finalDate, String data) throws IOException{ 	
+    	try{
+            HTable table = new HTable(conf, tableName);
+            Scan s = new Scan();
+            ResultScanner ss = table.getScanner(s);
+            
+            //Variables to calculate average
+            float average = 0;
+            float sum = 0;
+        	int count = 0;
+        	
+        	//Variables for the range
+        	int initYear = Integer.parseInt(initialDate.substring(0, 4));
+        	int initMonth = Integer.parseInt(initialDate.substring(4, 6));
+        	int initDay = Integer.parseInt(initialDate.substring(6, 8));
+        	int initHour = Integer.parseInt(initialDate.substring(8, 10));
+        	int initMin = Integer.parseInt(initialDate.substring(10, 12));
+        	String initDayLight = initialDate.substring(12);
+        	
+        	
+        	int finalYear = Integer.parseInt(finalDate.substring(0, 4));
+        	int finalMonth = Integer.parseInt(finalDate.substring(4, 6));
+        	int finalDay = Integer.parseInt(finalDate.substring(6, 8));
+        	int finalHour = Integer.parseInt(finalDate.substring(8, 10));
+        	int finalMin = Integer.parseInt(finalDate.substring(10, 12));
+        	String finalDayLight = finalDate.substring(12);
+        	
+        	String time = null;
+        	String dataValue = null;
+        	
+        	for (int i=1; i < HBaseSensors.getAllRecord(tableName)+1; i++)
+        	{
+        		Get get = new Get(String.valueOf(i).getBytes());
+                Result rs = table.get(get);
+                for(KeyValue kv : rs.raw()){
+                	
+                	if (new String(kv.getQualifier()).equals("time"))
+                		time = new String(kv.getValue());
+                	
+                	else if (new String(kv.getQualifier()).equals(data))
+                		dataValue = new String(kv.getValue());
+                }
+                
+                //Integer.parseInt(new String(kv.getValue()));
+                
+                int year = Integer.parseInt(time.substring(0, 4));
+            	int month = Integer.parseInt(time.substring(4, 6));
+            	int day = Integer.parseInt(time.substring(6, 8));
+            	int hour = Integer.parseInt(time.substring(8, 10));
+            	int min = Integer.parseInt(time.substring(10, 12));
+            	String dayLight = time.substring(12);
+            	
+            	
+            	//THINK ABOUT HOW TO CHECK THE RANGE 
+            	
+            	if (initYear == finalYear && initMonth == finalMonth && initDay == finalDay)
+            	{
+            		
+            	}
+            	else if (year >= initYear && year <= finalYear)
+            		if (month >= initMonth && month <= finalMonth)
+            			if (day >= initDay && day <= finalDay)
+            				if (hour >= initHour && hour <= finalHour)
+            					if (min >= initMin && min <= finalMin)
+            						sum = sum + Integer.parseInt(dataValue);
+            	
+        	}
+            
+            average = sum / HBaseSensors.getAllRecord(tableName);
+            System.out.println("Average of " + data + " in " + tableName + " is " + average);
+            
+            table.close();
+       } catch (IOException e){
+           e.printStackTrace();
+       }
+    	
     }
  
     public static void main(String[] agrs) {
         try {
-            
-            
-            // Create table "sensor-1";
-            String tableSensor1 = "sensor-1";
-            String[] sensor1Family = {"sensorData1"};
-            HBaseSensors.creatTable(tableSensor1, sensor1Family);
-            
-            // Create table "sensor-2";
-            String tableSensor2 = "sensor-2";
-            String[] sensor2Family = {"sensorData2"};
-            HBaseSensors.creatTable(tableSensor2, sensor2Family);
-            
-            
-            int row = 0;
-            int temperature = 0;
-            int humidity = 0;
-            int light = 0;
-            String nutrition = "10:20:30";
-            
-            Random generator = new Random();
-            
-            HBaseSensors.addRecord(tableSensor1, "1", "sensorData1", "time", "201507010100am");
-            HBaseSensors.addRecord(tableSensor1, "2", "sensorData1", "time", "201507010300am");
-            HBaseSensors.addRecord(tableSensor1, "3", "sensorData1", "time", "201507010500am");
-            HBaseSensors.addRecord(tableSensor1, "4", "sensorData1", "time", "201507010700am");
-            HBaseSensors.addRecord(tableSensor1, "5", "sensorData1", "time", "201507010900am");
-            HBaseSensors.addRecord(tableSensor1, "6", "sensorData1", "time", "201507011100am");
-            HBaseSensors.addRecord(tableSensor1, "7", "sensorData1", "time", "201507010100pm");
-            HBaseSensors.addRecord(tableSensor1, "8", "sensorData1", "time", "201507010300pm");
-            HBaseSensors.addRecord(tableSensor1, "9", "sensorData1", "time", "201507010500pm");
-            HBaseSensors.addRecord(tableSensor1, "10", "sensorData1", "time", "201507010700pm");
-            HBaseSensors.addRecord(tableSensor1, "11", "sensorData1", "time", "201507010900pm");
-            HBaseSensors.addRecord(tableSensor1, "12", "sensorData1", "time", "201507011100pm,");
-            
-            for (int z = 0; z < 12; z++)
-            {
-                row++;    
-                temperature = 50 + generator.nextInt(30);
-                humidity = 50 + generator.nextInt(30);
-                light = 50 + generator.nextInt(30);
-                
-                HBaseSensors.addRecord(tableSensor1, Integer.toString(row), "sensorData1", "temperature", Integer.toString(temperature));
-                HBaseSensors.addRecord(tableSensor1, Integer.toString(row), "sensorData1", "humidity", Integer.toString(humidity));
-                HBaseSensors.addRecord(tableSensor1, Integer.toString(row), "sensorData1", "light", Integer.toString(light));
-                HBaseSensors.addRecord(tableSensor1, Integer.toString(row), "sensorData1", "nutrition", nutrition);
-            }          
+        	
+        	HBaseSensors.average("sensor-1", "201507010100am", "201507010700am", "temperature");
+        	
+        	/** Create and populate table
+        	
+        	// Create table "sensor-1";
+        	String tableSensor1 = "sensor-1";
+        	String[] sensor1Family = {"sensorData1"};
+        	HBaseSensors.creatTable(tableSensor1, sensor1Family);
+        	
+        	
+        	int row = 0;
+        	int temperature = 0;
+        	int humidity = 0;
+        	int light = 0;
+        	String nutrition = "10:20:30";
+        	
+        	Random generator = new Random();
+        	
+        	HBaseSensors.addRecord(tableSensor1, "1", "sensorData1", "time", "201507010100am");
+        	HBaseSensors.addRecord(tableSensor1, "2", "sensorData1", "time", "201507010300am");
+        	HBaseSensors.addRecord(tableSensor1, "3", "sensorData1", "time", "201507010500am");
+        	HBaseSensors.addRecord(tableSensor1, "4", "sensorData1", "time", "201507010700am");
+        	
+        	for (int z = 0; z < 4; z++)
+        	{
+        		row++;	
+        		temperature = 50 + generator.nextInt(30);
+        		humidity = 50 + generator.nextInt(30);
+        		light = 50 + generator.nextInt(30);
+        		
+            	HBaseSensors.addRecord(tableSensor1, Integer.toString(row), "sensorData1", "temperature", Integer.toString(temperature));
+            	HBaseSensors.addRecord(tableSensor1, Integer.toString(row), "sensorData1", "humidity", Integer.toString(humidity));
+            	HBaseSensors.addRecord(tableSensor1, Integer.toString(row), "sensorData1", "light", Integer.toString(light));
+            	HBaseSensors.addRecord(tableSensor1, Integer.toString(row), "sensorData1", "nutrition", nutrition);
+        	}
+        	**/          
             
         } catch (Exception e) {
             e.printStackTrace();
