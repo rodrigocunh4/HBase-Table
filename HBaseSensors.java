@@ -126,30 +126,45 @@ public class HBaseSensors {
      * Scan (or list) a table
      */
     @SuppressWarnings("deprecation")
-	public static int getAllRecord (String tableName) {
-    	int totalRecord = 0;
+	public static void getAllRecord (String tableName) {
         try{
              HTable table = new HTable(conf, tableName);
              Scan s = new Scan();
              ResultScanner ss = table.getScanner(s);
              for(Result r:ss){
-            	 totalRecord++;
                  for(KeyValue kv : r.raw()){
-                	 /**
                     System.out.print(new String(kv.getRow()) + " ");
                     System.out.print(new String(kv.getFamily()) + ":");
                     System.out.print(new String(kv.getQualifier()) + " ");
                     System.out.print(kv.getTimestamp() + " ");
                     System.out.println(new String(kv.getValue()));
-                    **/
                  }
              }
              table.close();
         } catch (IOException e){
             e.printStackTrace();
         }
-        
-        return totalRecord;
+
+    }
+    
+    /**
+     * Return number of rows
+     */
+    @SuppressWarnings("deprecation")
+	public static int getTotalRows (String tableName) {
+    	int totalRows = 0;
+        try{
+             HTable table = new HTable(conf, tableName);
+             Scan s = new Scan();
+             ResultScanner ss = table.getScanner(s);
+             for(Result r:ss){
+            	 totalRows++;
+             }
+             table.close();
+        } catch (IOException e){
+            e.printStackTrace();
+        }       
+        return totalRows;
     }
     
     /**
@@ -185,7 +200,7 @@ public class HBaseSensors {
         	String time = null;
         	String dataValue = null;
         	
-        	for (int i=1; i < HBaseSensors.getAllRecord(tableName)+1; i++)
+        	for (int i=1; i < HBaseSensors.getTotalRows(tableName)+1; i++)
         	{
         		Get get = new Get(String.valueOf(i).getBytes());
                 Result rs = table.get(get);
@@ -195,7 +210,10 @@ public class HBaseSensors {
                 		time = new String(kv.getValue());
                 	
                 	else if (new String(kv.getQualifier()).equals(data))
+                	{
+                		System.out.println(new String(kv.getValue()));
                 		dataValue = new String(kv.getValue());
+                	}
                 }
                 
                 //Integer.parseInt(new String(kv.getValue()));
@@ -208,22 +226,34 @@ public class HBaseSensors {
             	String dayLight = time.substring(12);
             	
             	
-            	//THINK ABOUT HOW TO CHECK THE RANGE 
             	
-            	if (initYear == finalYear && initMonth == finalMonth && initDay == finalDay)
+            	//Check if the value is in the range
+            	if (year == finalYear && month == finalMonth && day == finalDay)
             	{
-            		
+            		if (dayLight.equals("am") && finalDayLight.equals("pm"))
+            		{
+            			sum = sum + Integer.parseInt(dataValue);
+            			count++;
+            		}
+            		else if (dayLight.equals(finalDayLight) && hour <= finalHour && min <= finalMin)
+            		{
+            			sum = sum + Integer.parseInt(dataValue);
+            			count++;
+            		}
             	}
             	else if (year >= initYear && year <= finalYear)
             		if (month >= initMonth && month <= finalMonth)
             			if (day >= initDay && day <= finalDay)
             				if (hour >= initHour && hour <= finalHour)
             					if (min >= initMin && min <= finalMin)
+            					{
             						sum = sum + Integer.parseInt(dataValue);
+            						count++;
+            					}
             	
         	}
             
-            average = sum / HBaseSensors.getAllRecord(tableName);
+            average = sum / count;
             System.out.println("Average of " + data + " in " + tableName + " is " + average);
             
             table.close();
@@ -236,7 +266,7 @@ public class HBaseSensors {
     public static void main(String[] agrs) {
         try {
         	
-        	HBaseSensors.average("sensor-1", "201507010100am", "201507010700am", "temperature");
+        	HBaseSensors.average("sensor-1", "201507010100am", "201507010300am", "temperature");
         	
         	/** Create and populate table
         	
