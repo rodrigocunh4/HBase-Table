@@ -188,10 +188,10 @@ public class HBaseSensors {
 			int initDay = Integer.parseInt(initialDate.substring(6, 8));
 			int initHour = Integer.parseInt(initialDate.substring(8, 10));
 			int initMin = Integer.parseInt(initialDate.substring(10, 12));
-			String initDayLight = initialDate.substring(12);
+			//String initDayLight = initialDate.substring(12);
 
-			String initHourStr = initialDate.substring(8, 10);
-			String initMinStr = initialDate.substring(10, 12);
+			//String initHourStr = initialDate.substring(8, 10);
+			//String initMinStr = initialDate.substring(10, 12);
 
 			int finalYear = Integer.parseInt(finalDate.substring(0, 4));
 			int finalMonth = Integer.parseInt(finalDate.substring(4, 6));
@@ -200,8 +200,8 @@ public class HBaseSensors {
 			int finalMin = Integer.parseInt(finalDate.substring(10, 12));
 			String finalDayLight = finalDate.substring(12);
 
-			String finalHourStr = finalDate.substring(8, 10);
-			String finalMinStr = finalDate.substring(10, 12);
+			//String finalHourStr = finalDate.substring(8, 10);
+			//String finalMinStr = finalDate.substring(10, 12);
 
 			String time = null;
 			String dataValue = null;
@@ -230,12 +230,12 @@ public class HBaseSensors {
 				// Check if the value is in the range
 				if (year == finalYear && month == finalMonth && day == finalDay) {
 					if (dayLight.equals("am") && finalDayLight.equals("pm")) {
-						System.out.println(Integer.parseInt(dataValue));
+						//System.out.println(Integer.parseInt(dataValue));
 						sum = sum + Integer.parseInt(dataValue);
 						count++;
 					} else if (dayLight.equals(finalDayLight)
 							&& hour <= finalHour && min <= finalMin) {
-						System.out.println(Integer.parseInt(dataValue));
+						//System.out.println(Integer.parseInt(dataValue));
 						sum = sum + Integer.parseInt(dataValue);
 						count++;
 					}
@@ -244,8 +244,7 @@ public class HBaseSensors {
 						if (day >= initDay && day <= finalDay)
 							if (hour >= initHour && hour <= finalHour)
 								if (min >= initMin && min <= finalMin) {
-									System.out.println(Integer
-											.parseInt(dataValue));
+									//System.out.println(Integer.parseInt(dataValue));
 									sum = sum + Integer.parseInt(dataValue);
 									count++;
 								}
@@ -253,7 +252,12 @@ public class HBaseSensors {
 
 			// Calculate average
 			average = sum / count;
+			
+			// Generate HTML
+			GenerateHTMLFile.generateHTML("average", data, tableName, average, initialDate, finalDate);
 
+			
+			/**
 			//Print result
 			System.out.println("Average of " + data + " in " + tableName
 					+ " is " + average);
@@ -262,6 +266,7 @@ public class HBaseSensors {
 					+ initDayLight + " to " + finalMonth + "/" + finalDay + "/"
 					+ finalYear + " " + finalHourStr + ":" + finalMinStr
 					+ finalDayLight);
+					**/
 
 			table.close();
 		} catch (IOException e) {
@@ -292,10 +297,10 @@ public class HBaseSensors {
 			int initDay = Integer.parseInt(initialDate.substring(6, 8));
 			int initHour = Integer.parseInt(initialDate.substring(8, 10));
 			int initMin = Integer.parseInt(initialDate.substring(10, 12));
-			String initDayLight = initialDate.substring(12);
+			//String initDayLight = initialDate.substring(12);
 
-			String initHourStr = initialDate.substring(8, 10);
-			String initMinStr = initialDate.substring(10, 12);
+			//String initHourStr = initialDate.substring(8, 10);
+			//String initMinStr = initialDate.substring(10, 12);
 
 			int finalYear = Integer.parseInt(finalDate.substring(0, 4));
 			int finalMonth = Integer.parseInt(finalDate.substring(4, 6));
@@ -304,8 +309,8 @@ public class HBaseSensors {
 			int finalMin = Integer.parseInt(finalDate.substring(10, 12));
 			String finalDayLight = finalDate.substring(12);
 
-			String finalHourStr = finalDate.substring(8, 10);
-			String finalMinStr = finalDate.substring(10, 12);
+			//String finalHourStr = finalDate.substring(8, 10);
+			//String finalMinStr = finalDate.substring(10, 12);
 
 			String time = null;
 			String dataValue = null;
@@ -358,7 +363,7 @@ public class HBaseSensors {
 
 			// Calculate deviation
 			for (int i = 0; i < count; i++) {
-				System.out.println(dataList.get(i));
+				//System.out.println(dataList.get(i));
 				deviation = deviation + Math.pow(dataList.get(i) - average, 2);
 			}
 
@@ -366,8 +371,12 @@ public class HBaseSensors {
 
 			// Calculate standard deviation
 			standardDeviation = Math.sqrt(deviation);
+			
+			//Generate HTML file
+			GenerateHTMLFile.generateHTML("standardDeviation", data, tableName, standardDeviation, initialDate, finalDate);
 
 
+			/**
 			//Print result
 			System.out.println("Standard deviation of " + data + " in "
 					+ tableName + " is " + standardDeviation);
@@ -377,6 +386,7 @@ public class HBaseSensors {
 					+ initDayLight + " to " + finalMonth + "/" + finalDay + "/"
 					+ finalYear + " " + finalHourStr + ":" + finalMinStr
 					+ finalDayLight);
+					**/
 
 			table.close();
 		} catch (IOException e) {
